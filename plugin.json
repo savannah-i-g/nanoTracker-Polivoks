@@ -82,7 +82,7 @@
       "highlightText":"#ffffff"
     },
     "controls": [
-      { "type": "webview", "source": "web/index.html", "aspectRatio": "16/7", "forwardNotes": true, "forwardParams": true, "acceptsParamWrites": true, "acceptsFocus": false },
+      { "type": "webview", "source": "web/index.html", "aspectRatio": "16/7", "forwardNotes": true, "forwardParams": true, "acceptsParamWrites": true, "acceptsFocus": true },
 
       { "type": "knob", "parameter": "mod.rate",     "label": "МОД ЧАСТ"   },
       { "type": "knob", "parameter": "mod.shape",    "label": "МОД ФОРМА"  },
