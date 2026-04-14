@@ -195,6 +195,16 @@
       inset 0 -1px 2px rgba(0,0,0,0.9),
       0 2px 3px rgba(0,0,0,0.65);
     position: relative;
+    cursor: ns-resize;
+    touch-action: none;
+  }
+  .knob[data-key]:active,
+  .knob[data-key].dragging {
+    box-shadow:
+      inset 0 1px 1px rgba(140,160,180,0.28),
+      inset 0 -1px 2px rgba(0,0,0,0.9),
+      0 2px 3px rgba(0,0,0,0.65),
+      0 0 6px rgba(118,223,208,0.35);
   }
   .knob::before {
     /* indicator line */
@@ -579,6 +589,21 @@
     "fenv.a", "fenv.d", "fenv.r",
     "aenv.a", "aenv.d", "aenv.r"
   ]);
+  // Step sizes mirror plugin.json so integer-stepped params (switch-like
+  // shape/range/mode selectors) snap to their discrete positions when
+  // the user drags the knob.
+  const STEPS = {
+    "mod.rate": 0.01, "mod.shape": 1,
+    "osc1.range": 1, "osc1.shape": 1, "osc1.tune": 1, "osc1.modDepth": 0.01,
+    "osc2.range": 1, "osc2.shape": 1, "osc2.detune": 0.01, "osc2.modDepth": 0.01, "osc2.xmod": 0.01,
+    "mix.osc1": 0.01, "mix.osc2": 0.01, "mix.noise": 0.01,
+    "filt.mode": 1, "filt.cutoff": 1, "filt.reso": 0.01, "filt.envAmt": 0.01, "filt.modAmt": 0.01,
+    "fenv.a": 0.001, "fenv.d": 0.001, "fenv.s": 0.01, "fenv.r": 0.001, "fenv.mode": 1,
+    "aenv.a": 0.001, "aenv.d": 0.001, "aenv.s": 0.01, "aenv.r": 0.001, "aenv.mode": 1,
+    "amp.modAmt": 0.01
+  };
+  // Snapshot of factory defaults for double-click reset.
+  const DEFAULTS = Object.freeze({ ...PARAMS });
 
   const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
   const midiName = n => (typeof n !== "number" || !isFinite(n))
@@ -613,6 +638,27 @@
     // -135° at 0, +135° at 1
     const deg = -135 + t * 270;
     el.style.setProperty("--rot", deg + "deg");
+  }
+  function denormalize(key, t) {
+    const [lo, hi] = RANGES[key] || [0, 1];
+    if (LOG_KEYS.has(key)) {
+      const a = Math.max(lo, 1e-6);
+      const b = Math.max(hi, a * 1.0001);
+      return a * Math.pow(b / a, Math.max(0, Math.min(1, t)));
+    }
+    return lo + (hi - lo) * Math.max(0, Math.min(1, t));
+  }
+  function snap(key, val) {
+    const step = STEPS[key];
+    const [lo, hi] = RANGES[key] || [0, 1];
+    let out = val;
+    if (step && step > 0) {
+      out = Math.round((val - lo) / step) * step + lo;
+      // Guard against floating-point crud creeping into display values.
+      const decimals = step >= 1 ? 0 : Math.min(4, Math.max(0, -Math.floor(Math.log10(step))));
+      out = parseFloat(out.toFixed(decimals));
+    }
+    return Math.max(lo, Math.min(hi, out));
   }
   for (const k of Object.keys(PARAMS)) updateKnob(k);
 
@@ -746,6 +792,74 @@
   }
   requestAnimationFrame(frame);
 
+  // --- Local-echo side-effects: keep derived visuals in sync whenever
+  //     a param value changes, whether from host push or local drag.
+  function applyLocalSideEffects(key) {
+    if (key.startsWith("filt")) updateFilterGlow();
+    if (key === "glide" || key === "drive" || key === "volume" || key === "mod.rate") updateTape();
+  }
+
+  // --- Knob drag: vertical drag adjusts value, shift = fine mode,
+  //     double-click = reset to factory default. Dispatches a paramWrite
+  //     message on every change; the host (when its acceptsParamWrites
+  //     flag is set in plugin.json) echoes the clamped value back via a
+  //     "param" event. We ignore that echo for the key currently being
+  //     dragged to avoid fighting the user's pointer.
+  let activeDrag = null;
+  for (const el of knobs) {
+    const key = el.getAttribute("data-key");
+    if (!(key in PARAMS)) continue;
+
+    el.addEventListener("pointerdown", (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      e.preventDefault();
+      try { el.setPointerCapture(e.pointerId); } catch (_) {}
+      el.classList.add("dragging");
+      activeDrag = {
+        pointerId: e.pointerId,
+        key,
+        startY: e.clientY,
+        startT: normalize(key, PARAMS[key] ?? 0),
+      };
+    });
+
+    el.addEventListener("pointermove", (e) => {
+      if (!activeDrag || activeDrag.pointerId !== e.pointerId) return;
+      const dy = activeDrag.startY - e.clientY;       // drag up = increase
+      const fine = e.shiftKey ? 0.2 : 1;              // shift for fine control
+      const pxPerRange = 220;                         // 220 px = full travel
+      const t = activeDrag.startT + (dy / pxPerRange) * fine;
+      const raw = denormalize(activeDrag.key, t);
+      const val = snap(activeDrag.key, raw);
+      if (PARAMS[activeDrag.key] !== val) {
+        PARAMS[activeDrag.key] = val;
+        updateKnob(activeDrag.key);
+        applyLocalSideEffects(activeDrag.key);
+        try {
+          parent.postMessage({ type: "paramWrite", key: activeDrag.key, value: val }, "*");
+        } catch (_) {}
+      }
+    });
+
+    const endDrag = (e) => {
+      if (!activeDrag || activeDrag.pointerId !== e.pointerId) return;
+      try { el.releasePointerCapture(e.pointerId); } catch (_) {}
+      el.classList.remove("dragging");
+      activeDrag = null;
+    };
+    el.addEventListener("pointerup", endDrag);
+    el.addEventListener("pointercancel", endDrag);
+
+    el.addEventListener("dblclick", () => {
+      const def = DEFAULTS[key];
+      if (typeof def !== "number") return;
+      PARAMS[key] = def;
+      updateKnob(key);
+      applyLocalSideEffects(key);
+      try { parent.postMessage({ type: "paramWrite", key, value: def }, "*"); } catch (_) {}
+    });
+  }
+
   // --- Host event bridge ---
   window.addEventListener("message", (e) => {
     const ev = e.data;
@@ -780,12 +894,22 @@
         break;
       }
       case "param": {
+        // Ignore echoes for the knob currently being dragged — the
+        // pointer is authoritative until the user releases it.
+        if (activeDrag && activeDrag.key === ev.key) break;
         if (ev.key in PARAMS) {
           PARAMS[ev.key] = ev.value;
           updateKnob(ev.key);
-          if (ev.key.startsWith("filt")) updateFilterGlow();
-          if (ev.key === "glide" || ev.key === "drive" || ev.key === "volume" || ev.key === "mod.rate") updateTape();
+          applyLocalSideEffects(ev.key);
         }
+        break;
+      }
+      case "__nt_error": {
+        // Host posts these when it rejects/ignores an iframe message
+        // (e.g. paramWrite arrived but acceptsParamWrites wasn't set).
+        // Surface to console so authors can see why a drag did nothing.
+        console.warn("[polivoks-webview] host rejected message:",
+          ev.where || "?", "—", ev.message || "");
         break;
       }
       case "themeChange":

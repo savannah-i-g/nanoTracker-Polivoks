@@ -7,7 +7,7 @@
     "author": "nanoTracker",
     "description": "Soviet military-industrial dual-oscillator duophonic synth — faithful emulation of the 1982 Formanta Polivoks. Two VCOs with tri/saw/square/pulse waveforms, noise source, comparator-based 2-pole VCF (LP/BP) with aggressive self-oscillation, two ADSR envelopes with repeat mode (AD-LFO), one LFO modulator, oscillator cross-modulation, and glissando between voices. Dark navy panel with Cyrillic labels."
   },
-  "requires": ["worklet-v3", "webview-ui", "themeOverride"],
+  "requires": ["worklet-v3", "webview-ui", "webview-writes", "themeOverride"],
   "parameters": [
     { "key": "mod.rate",     "label": "МОД ЧАСТ",   "min": 0.05, "max": 30,    "default": 4,     "step": 0.01, "unit": "Hz", "displayDecimals": 2, "curve": "exponential" },
     { "key": "mod.shape",    "label": "МОД ФОРМА",  "min": 0,    "max": 3,     "default": 0,     "step": 1,    "displayDecimals": 0 },
@@ -82,7 +82,7 @@
       "highlightText":"#ffffff"
     },
     "controls": [
-      { "type": "webview", "source": "web/index.html", "aspectRatio": "16/7", "forwardNotes": true, "forwardParams": true, "acceptsFocus": false },
+      { "type": "webview", "source": "web/index.html", "aspectRatio": "16/7", "forwardNotes": true, "forwardParams": true, "acceptsParamWrites": true, "acceptsFocus": false },
 
       { "type": "knob", "parameter": "mod.rate",     "label": "МОД ЧАСТ"   },
       { "type": "knob", "parameter": "mod.shape",    "label": "МОД ФОРМА"  },
