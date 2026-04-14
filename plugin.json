@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 3,
+  "manifest": {
+    "name": "POLIVOKS",
+    "version": "1.0.0",
+    "type": "instrument",
+    "author": "nanoTracker",
+    "description": "Soviet military-industrial dual-oscillator duophonic synth — faithful emulation of the 1982 Formanta Polivoks. Two VCOs with tri/saw/square/pulse waveforms, noise source, comparator-based 2-pole VCF (LP/BP) with aggressive self-oscillation, two ADSR envelopes with repeat mode (AD-LFO), one LFO modulator, oscillator cross-modulation, and glissando between voices. Dark navy panel with Cyrillic labels."
+  },
+  "requires": ["worklet-v3", "webview-ui", "themeOverride"],
+  "parameters": [
+    { "key": "mod.rate",     "label": "МОД ЧАСТ",   "min": 0.05, "max": 30,    "default": 4,     "step": 0.01, "unit": "Hz", "displayDecimals": 2, "curve": "exponential" },
+    { "key": "mod.shape",    "label": "МОД ФОРМА",  "min": 0,    "max": 3,     "default": 0,     "step": 1,    "displayDecimals": 0 },
+
+    { "key": "osc1.range",   "label": "I ДИАПАЗ",   "min": 0,    "max": 3,     "default": 1,     "step": 1,    "displayDecimals": 0 },
+    { "key": "osc1.shape",   "label": "I ФОРМА",    "min": 0,    "max": 4,     "default": 1,     "step": 1,    "displayDecimals": 0 },
+    { "key": "osc1.tune",    "label": "I НАСТР",    "min": -100, "max": 100,   "default": 0,     "step": 1,    "unit": "c",  "displayDecimals": 0 },
+    { "key": "osc1.modDepth","label": "I МОДУЛ",    "min": 0,    "max": 1,     "default": 0,     "step": 0.01, "displayDecimals": 2 },
+
+    { "key": "osc2.range",   "label": "II ДИАПАЗ",  "min": 0,    "max": 3,     "default": 1,     "step": 1,    "displayDecimals": 0 },
+    { "key": "osc2.shape",   "label": "II ФОРМА",   "min": 0,    "max": 4,     "default": 0,     "step": 1,    "displayDecimals": 0 },
+    { "key": "osc2.detune",  "label": "II РАССТР",  "min": -12,  "max": 12,    "default": 0.07,  "step": 0.01, "unit": "st", "displayDecimals": 2 },
+    { "key": "osc2.modDepth","label": "II МОДУЛ",   "min": 0,    "max": 1,     "default": 0,     "step": 0.01, "displayDecimals": 2 },
+    { "key": "osc2.xmod",    "label": "II X-МОД",   "min": 0,    "max": 1,     "default": 0,     "step": 0.01, "displayDecimals": 2 },
+
+    { "key": "mix.osc1",     "label": "МИКС I",     "min": 0,    "max": 1,     "default": 0.7,   "step": 0.01, "displayDecimals": 2 },
+    { "key": "mix.osc2",     "label": "МИКС II",    "min": 0,    "max": 1,     "default": 0.5,   "step": 0.01, "displayDecimals": 2 },
+    { "key": "mix.noise",    "label": "МИКС ШУМ",   "min": 0,    "max": 1,     "default": 0,     "step": 0.01, "displayDecimals": 2 },
+
+    { "key": "filt.mode",    "label": "ФИЛ РЕЖ",    "min": 0,    "max": 1,     "default": 0,     "step": 1,    "displayDecimals": 0 },
+    { "key": "filt.cutoff",  "label": "ФИЛ СРЕЗ",   "min": 40,   "max": 16000, "default": 1200,  "step": 1,    "unit": "Hz", "displayDecimals": 0, "curve": "exponential" },
+    { "key": "filt.reso",    "label": "ФИЛ РЕЗ",    "min": 0,    "max": 1,     "default": 0.35,  "step": 0.01, "displayDecimals": 2 },
+    { "key": "filt.envAmt",  "label": "ФИЛ ОГИБ",   "min": -1,   "max": 1,     "default": 0.5,   "step": 0.01, "displayDecimals": 2 },
+    { "key": "filt.modAmt",  "label": "ФИЛ МОДУЛ",  "min": 0,    "max": 1,     "default": 0,     "step": 0.01, "displayDecimals": 2 },
+
+    { "key": "fenv.a",       "label": "ФИЛ АТАКА",  "min": 0.001,"max": 4,     "default": 0.01,  "step": 0.001,"unit": "s",  "displayDecimals": 3, "curve": "exponential" },
+    { "key": "fenv.d",       "label": "ФИЛ ЗАТ",    "min": 0.005,"max": 6,     "default": 0.35,  "step": 0.001,"unit": "s",  "displayDecimals": 3, "curve": "exponential" },
+    { "key": "fenv.s",       "label": "ФИЛ ПЬЕД",   "min": 0,    "max": 1,     "default": 0.4,   "step": 0.01, "displayDecimals": 2 },
+    { "key": "fenv.r",       "label": "ФИЛ ПОСЛ",   "min": 0.005,"max": 6,     "default": 0.2,   "step": 0.001,"unit": "s",  "displayDecimals": 3, "curve": "exponential" },
+    { "key": "fenv.mode",    "label": "ФИЛ РЕЖ.ОГ", "min": 0,    "max": 1,     "default": 0,     "step": 1,    "displayDecimals": 0 },
+
+    { "key": "aenv.a",       "label": "УС АТАКА",   "min": 0.001,"max": 4,     "default": 0.005, "step": 0.001,"unit": "s",  "displayDecimals": 3, "curve": "exponential" },
+    { "key": "aenv.d",       "label": "УС ЗАТ",     "min": 0.005,"max": 6,     "default": 0.3,   "step": 0.001,"unit": "s",  "displayDecimals": 3, "curve": "exponential" },
+    { "key": "aenv.s",       "label": "УС ПЬЕД",    "min": 0,    "max": 1,     "default": 0.85,  "step": 0.01, "displayDecimals": 2 },
+    { "key": "aenv.r",       "label": "УС ПОСЛ",    "min": 0.005,"max": 6,     "default": 0.15,  "step": 0.001,"unit": "s",  "displayDecimals": 3, "curve": "exponential" },
+    { "key": "aenv.mode",    "label": "УС РЕЖ.ОГ",  "min": 0,    "max": 1,     "default": 0,     "step": 1,    "displayDecimals": 0 },
+    { "key": "amp.modAmt",   "label": "УС ТРЕМ",    "min": 0,    "max": 1,     "default": 0,     "step": 0.01, "displayDecimals": 2 },
+
+    { "key": "glide",        "label": "ГЛИССАНДО",  "min": 0,    "max": 1,     "default": 0,     "step": 0.001,"unit": "s",  "displayDecimals": 3 },
+    { "key": "drive",        "label": "ПЕРЕГРУЗ",   "min": 0,    "max": 1,     "default": 0.15,  "step": 0.01, "displayDecimals": 2 },
+    { "key": "volume",       "label": "ГРОМКОСТЬ",  "min": 0,    "max": 1.5,   "default": 0.85,  "step": 0.01, "displayDecimals": 2 }
+  ],
+  "dsp": {
+    "processorName": null,
+    "voices": 2,
+    "voiceStealing": "oldest",
+    "oscillators": [],
+    "samples": [],
+    "envelope": { "attack": 0.005, "decay": 0.3, "sustain": 0.85, "release": 0.15 },
+    "filter": null,
+    "worklet": {
+      "processorName": "polivoks-processor",
+      "numberOfInputs": 0,
+      "numberOfOutputs": 1,
+      "outputChannelCount": [2]
+    }
+  },
+  "ui": {
+    "layout": "flex",
+    "accentColor": "#d4dde0",
+    "themeOverride": {
+      "primary":      "#d4dde0",
+      "primaryDim":   "#6a7880",
+      "primaryGlow":  "#77dfd0",
+      "bg":           "#0e1418",
+      "bgElevated":   "#1a2028",
+      "text":         "#e8ecef",
+      "textDim":      "#7f8c94",
+      "border":       "#2a3740",
+      "scanline":     "#77dfd0",
+      "highlightBg":  "#cc3a2e",
+      "highlightText":"#ffffff"
+    },
+    "controls": [
+      { "type": "webview", "source": "web/index.html", "aspectRatio": "16/7", "forwardNotes": true, "forwardParams": true, "acceptsFocus": false },
+
+      { "type": "knob", "parameter": "mod.rate",     "label": "МОД ЧАСТ"   },
+      { "type": "knob", "parameter": "mod.shape",    "label": "МОД ФОРМА"  },
+
+      { "type": "knob", "parameter": "osc1.range",   "label": "I ДИАПАЗ"   },
+      { "type": "knob", "parameter": "osc1.shape",   "label": "I ФОРМА"    },
+      { "type": "knob", "parameter": "osc1.tune",    "label": "I НАСТР"    },
+      { "type": "knob", "parameter": "osc1.modDepth","label": "I МОДУЛ"    },
+
+      { "type": "knob", "parameter": "osc2.range",   "label": "II ДИАПАЗ"  },
+      { "type": "knob", "parameter": "osc2.shape",   "label": "II ФОРМА"   },
+      { "type": "knob", "parameter": "osc2.detune",  "label": "II РАССТР"  },
+      { "type": "knob", "parameter": "osc2.modDepth","label": "II МОДУЛ"   },
+      { "type": "knob", "parameter": "osc2.xmod",    "label": "II X-МОД"   },
+
+      { "type": "knob", "parameter": "mix.osc1",     "label": "МИКС I"     },
+      { "type": "knob", "parameter": "mix.osc2",     "label": "МИКС II"    },
+      { "type": "knob", "parameter": "mix.noise",    "label": "МИКС ШУМ"   },
+
+      { "type": "knob", "parameter": "filt.mode",    "label": "ФИЛ РЕЖ"    },
+      { "type": "knob", "parameter": "filt.cutoff",  "label": "ФИЛ СРЕЗ"   },
+      { "type": "knob", "parameter": "filt.reso",    "label": "ФИЛ РЕЗ"    },
+      { "type": "knob", "parameter": "filt.envAmt",  "label": "ФИЛ ОГИБ"   },
+      { "type": "knob", "parameter": "filt.modAmt",  "label": "ФИЛ МОДУЛ"  },
+
+      { "type": "knob", "parameter": "fenv.a",       "label": "ФИЛ АТАКА"  },
+      { "type": "knob", "parameter": "fenv.d",       "label": "ФИЛ ЗАТ"    },
+      { "type": "knob", "parameter": "fenv.s",       "label": "ФИЛ ПЬЕД"   },
+      { "type": "knob", "parameter": "fenv.r",       "label": "ФИЛ ПОСЛ"   },
+      { "type": "knob", "parameter": "fenv.mode",    "label": "ФИЛ РЕЖ.ОГ" },
+
+      { "type": "knob", "parameter": "aenv.a",       "label": "УС АТАКА"   },
+      { "type": "knob", "parameter": "aenv.d",       "label": "УС ЗАТ"     },
+      { "type": "knob", "parameter": "aenv.s",       "label": "УС ПЬЕД"    },
+      { "type": "knob", "parameter": "aenv.r",       "label": "УС ПОСЛ"    },
+      { "type": "knob", "parameter": "aenv.mode",    "label": "УС РЕЖ.ОГ"  },
+      { "type": "knob", "parameter": "amp.modAmt",   "label": "УС ТРЕМ"    },
+
+      { "type": "knob", "parameter": "glide",        "label": "ГЛИССАНДО"  },
+      { "type": "knob", "parameter": "drive",        "label": "ПЕРЕГРУЗ"   },
+      { "type": "knob", "parameter": "volume",       "label": "ГРОМКОСТЬ"  }
+    ]
+  }
+}

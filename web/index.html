@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>ПОЛИВОКС</title>
+<style>
+  :root {
+    --panel:      #0f1519;
+    --panel-2:    #141b20;
+    --panel-hi:   #1c262d;
+    --rim:        #273440;
+    --rim-lite:   #3a4a56;
+    --ink:        #e5ecef;
+    --ink-dim:    #8896a0;
+    --teal:       #6ed4c4;
+    --teal-glow:  #77dfd0;
+    --led-red:    #e03a2e;
+    --led-red-hi: #ff7a6d;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    background: #080c0f;
+    color: var(--ink);
+    font-family: "Georgia", "Times New Roman", serif;
+    overflow: hidden;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background:
+      radial-gradient(ellipse at 50% 0%, #18222a 0%, #080c0f 70%);
+  }
+
+  .chassis {
+    position: relative;
+    width: 100%; height: 100%;
+    padding: 10px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 6px;
+    background:
+      linear-gradient(180deg, #131a20 0%, #0a1014 100%);
+    border: 2px solid #000;
+    box-shadow: inset 0 0 0 1px #2b3a46, inset 0 2px 20px rgba(0,0,0,0.6);
+  }
+
+  /* ---------- header / brand ---------- */
+  .header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    padding: 4px 10px;
+    background: linear-gradient(180deg, #0c1216 0%, #141d24 100%);
+    border: 1px solid #25323c;
+    border-radius: 2px;
+    gap: 14px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo {
+    font-family: "Arial Black", "Helvetica", sans-serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: 26px;
+    letter-spacing: 3px;
+    color: #f0f3f5;
+    text-shadow:
+      0 1px 0 #000,
+      0 0 6px rgba(118, 223, 208, 0.15);
+    padding-left: 4px;
+  }
+  .logo-mark {
+    display: inline-block;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid #f0f3f5;
+    position: relative;
+  }
+  .logo-mark::before {
+    content: "";
+    position: absolute;
+    left: 50%; top: 4px;
+    width: 2px; height: 14px;
+    background: #f0f3f5;
+    transform: translateX(-50%) rotate(45deg);
+    transform-origin: 50% 50%;
+  }
+  .sub {
+    font-family: "Courier New", monospace;
+    font-size: 9px;
+    color: var(--ink-dim);
+    letter-spacing: 2px;
+  }
+  .status-row {
+    display: flex; gap: 14px; align-items: center;
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    color: var(--ink-dim);
+  }
+  .status-row .val {
+    color: var(--teal-glow);
+    text-shadow: 0 0 5px var(--teal-glow);
+    font-weight: 700;
+    min-width: 42px;
+    display: inline-block;
+    text-align: right;
+  }
+  .power {
+    display: flex; align-items: center; gap: 6px;
+    padding: 3px 8px;
+    border: 1px solid #2c3a46;
+    border-radius: 2px;
+    background: #0b1013;
+  }
+  .led {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #3a1612;
+    box-shadow: inset 0 0 2px rgba(0,0,0,0.8);
+    transition: background 50ms, box-shadow 50ms;
+  }
+  .led.on {
+    background: var(--led-red-hi);
+    box-shadow:
+      0 0 6px var(--led-red),
+      0 0 14px var(--led-red),
+      inset 0 0 3px rgba(255,200,190,0.6);
+  }
+  .power .txt {
+    font-size: 9px; letter-spacing: 2px; color: var(--ink-dim);
+  }
+
+  /* ---------- sections grid ---------- */
+  .modules {
+    display: grid;
+    grid-template-columns: 0.9fr 1fr 1fr 0.9fr 1.2fr 1fr;
+    gap: 6px;
+    min-height: 0;
+  }
+  .section {
+    position: relative;
+    padding: 6px 8px 4px;
+    background:
+      linear-gradient(180deg, #111820 0%, #0a0f12 100%);
+    border: 1px solid #1f2a33;
+    border-top-color: #35465a;
+    border-left-color: #2a3744;
+    box-shadow:
+      inset 0 1px 0 rgba(80,110,130,0.18),
+      inset 0 -1px 0 rgba(0,0,0,0.6),
+      0 0 0 1px #000;
+    border-radius: 2px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .sec-title {
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 3px;
+    font-weight: 700;
+    color: var(--ink);
+    padding: 2px 0 6px;
+    border-bottom: 1px solid #1b2630;
+    margin-bottom: 6px;
+    font-family: "Arial", sans-serif;
+    text-shadow: 0 1px 0 #000;
+  }
+  .section.active .sec-title {
+    color: var(--teal-glow);
+    text-shadow: 0 0 6px var(--teal-glow);
+  }
+
+  /* knob grid inside each section */
+  .knobs {
+    display: grid;
+    gap: 6px 4px;
+    flex: 1;
+  }
+  .knobs.c2 { grid-template-columns: 1fr 1fr; }
+  .knobs.c3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .knob-cell {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 2px;
+  }
+  .knob {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 25%, #2a323a 0%, #15191e 55%, #0a0d10 100%);
+    border: 1px solid #000;
+    box-shadow:
+      inset 0 1px 1px rgba(120,140,160,0.18),
+      inset 0 -1px 2px rgba(0,0,0,0.9),
+      0 2px 3px rgba(0,0,0,0.65);
+    position: relative;
+  }
+  .knob::before {
+    /* indicator line */
+    content: "";
+    position: absolute;
+    left: 50%; top: 3px;
+    width: 2px; height: 14px;
+    background: #e2e8ec;
+    border-radius: 1px;
+    transform-origin: 50% 18px;
+    transform: translateX(-50%) rotate(var(--rot, -135deg));
+    box-shadow: 0 0 2px rgba(255,255,255,0.3);
+  }
+  .knob::after {
+    /* centre dot */
+    content: "";
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: #3a434d;
+    transform: translate(-50%, -50%);
+  }
+  .knob-min {
+    position: absolute;
+    font-size: 6px;
+    color: var(--ink-dim);
+    font-family: "Courier New", monospace;
+    letter-spacing: 1px;
+  }
+  .knob-min.l { left: -2px; bottom: 2px; }
+  .knob-min.r { right: -2px; bottom: 2px; }
+
+  .knob-label {
+    font-size: 8px;
+    letter-spacing: 1px;
+    color: var(--ink);
+    font-family: "Arial", sans-serif;
+    text-align: center;
+    line-height: 1.1;
+  }
+
+  /* rocker switches (for mode-like params) */
+  .switch {
+    display: inline-flex; flex-direction: column; align-items: center;
+    gap: 2px;
+  }
+  .switch-body {
+    width: 24px; height: 30px;
+    background: linear-gradient(180deg, #e8ebed 0%, #b4b9bd 50%, #e8ebed 100%);
+    border: 1px solid #000;
+    border-radius: 2px;
+    position: relative;
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.5), 0 1px 2px rgba(0,0,0,0.7);
+    cursor: default;
+  }
+  .switch-body::before {
+    content: "";
+    position: absolute;
+    left: 3px; right: 3px;
+    height: 10px;
+    background: linear-gradient(180deg, #8c9094 0%, #5f6367 100%);
+    border: 1px solid #222;
+    border-radius: 1px;
+    top: var(--pos, 3px);
+    transition: top 120ms;
+  }
+  .switch.pos1 .switch-body::before { top: 3px; }
+  .switch.pos2 .switch-body::before { top: 16px; }
+
+  /* scope strip */
+  .footer {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    padding: 4px 10px;
+    background: linear-gradient(180deg, #0c1216 0%, #141d24 100%);
+    border: 1px solid #25323c;
+    border-radius: 2px;
+    align-items: center;
+  }
+  .scope-wrap {
+    flex: 1;
+    height: 36px;
+    background: #060a0d;
+    border: 1px solid #1a252e;
+    position: relative;
+    overflow: hidden;
+  }
+  .scope-wrap canvas {
+    width: 100%; height: 100%; display: block;
+  }
+  .scope-wrap .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(118,223,208,0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(118,223,208,0.08) 1px, transparent 1px);
+    background-size: 18px 12px;
+    pointer-events: none;
+  }
+  .tape {
+    display: flex; gap: 10px;
+    font-family: "Courier New", monospace;
+    font-size: 9px;
+    color: var(--ink-dim);
+    letter-spacing: 1px;
+  }
+  .tape .k { color: var(--ink-dim); margin-right: 4px; }
+  .tape .v { color: var(--teal-glow); }
+
+  /* voice-active glow */
+  .section.hot {
+    box-shadow:
+      inset 0 1px 0 rgba(80,110,130,0.18),
+      inset 0 0 24px rgba(118,223,208,0.15),
+      inset 0 -1px 0 rgba(0,0,0,0.6),
+      0 0 0 1px #000,
+      0 0 14px rgba(118,223,208,0.22);
+  }
+
+  /* layout span helpers */
+  .span-2 { grid-column: span 2; }
+
+  /* very narrow screens: collapse footer tape */
+  @media (max-width: 780px) {
+    .tape { display: none; }
+  }
+
+  /* CRT scanlines */
+  .chassis::after {
+    content: "";
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,0.015) 0px,
+      rgba(255,255,255,0.015) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    mix-blend-mode: overlay;
+    z-index: 2;
+  }
+</style>
+</head>
+<body>
+<div class="chassis">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <span class="logo">ПОЛИВОКС</span>
+      <span class="logo-mark" aria-hidden="true"></span>
+    </div>
+    <div class="status-row">
+      <span>НОТА <span class="val" id="noteVal">———</span></span>
+      <span>ЧАСТ <span class="val" id="hzVal">———</span></span>
+      <span>МОД <span class="val" id="modVal">———</span></span>
+      <span class="sub">ФОРМАНТА · 1982 · СССР</span>
+    </div>
+    <div class="power">
+      <span class="led" id="ledPower"></span>
+      <span class="txt">СЕТЬ</span>
+    </div>
+  </div>
+
+  <!-- Modules -->
+  <div class="modules">
+
+    <!-- МОДУЛЯТОР -->
+    <div class="section" id="secMod">
+      <div class="sec-title">МОДУЛЯТОР</div>
+      <div class="knobs c2">
+        <div class="knob-cell">
+          <div class="knob" data-key="mod.rate"></div>
+          <div class="knob-label">ЧАСТОТА</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="mod.shape"></div>
+          <div class="knob-label">ФОРМА</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ГЕНЕРАТОР I -->
+    <div class="section" id="secOsc1">
+      <div class="sec-title">ГЕНЕРАТОР&nbsp;I</div>
+      <div class="knobs c2">
+        <div class="knob-cell">
+          <div class="knob" data-key="osc1.range"></div>
+          <div class="knob-label">ДИАПАЗОН</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="osc1.shape"></div>
+          <div class="knob-label">ФОРМА</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="osc1.tune"></div>
+          <div class="knob-label">НАСТРОЙКА</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="osc1.modDepth"></div>
+          <div class="knob-label">МОДУЛЯЦИЯ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ГЕНЕРАТОР II -->
+    <div class="section" id="secOsc2">
+      <div class="sec-title">ГЕНЕРАТОР&nbsp;II</div>
+      <div class="knobs c2">
+        <div class="knob-cell">
+          <div class="knob" data-key="osc2.range"></div>
+          <div class="knob-label">ДИАПАЗОН</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="osc2.shape"></div>
+          <div class="knob-label">ФОРМА</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="osc2.detune"></div>
+          <div class="knob-label">РАССТРОЙКА</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="osc2.modDepth"></div>
+          <div class="knob-label">МОДУЛЯЦИЯ</div>
+        </div>
+        <div class="knob-cell span-2">
+          <div class="knob" data-key="osc2.xmod"></div>
+          <div class="knob-label">X-МОДУЛЯЦ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- МИКШЕР -->
+    <div class="section" id="secMix">
+      <div class="sec-title">МИКШЕР</div>
+      <div class="knobs c2">
+        <div class="knob-cell span-2">
+          <div class="knob" data-key="mix.osc1"></div>
+          <div class="knob-label">ГЕН&nbsp;I</div>
+        </div>
+        <div class="knob-cell span-2">
+          <div class="knob" data-key="mix.osc2"></div>
+          <div class="knob-label">ГЕН&nbsp;II</div>
+        </div>
+        <div class="knob-cell span-2">
+          <div class="knob" data-key="mix.noise"></div>
+          <div class="knob-label">ШУМ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ФИЛЬТР -->
+    <div class="section" id="secFilt">
+      <div class="sec-title">ФИЛЬТР</div>
+      <div class="knobs c3">
+        <div class="knob-cell">
+          <div class="knob" data-key="filt.mode"></div>
+          <div class="knob-label">РЕЖИМ</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="filt.cutoff"></div>
+          <div class="knob-label">СРЕЗ</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="filt.reso"></div>
+          <div class="knob-label">РЕЗОНАНС</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="filt.envAmt"></div>
+          <div class="knob-label">ОГИБ</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="filt.modAmt"></div>
+          <div class="knob-label">МОДУЛ</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="fenv.mode"></div>
+          <div class="knob-label">Ф.ОГИБ</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="fenv.a"></div>
+          <div class="knob-label">АТАКА</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="fenv.d"></div>
+          <div class="knob-label">ЗАТУХ</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="fenv.s"></div>
+          <div class="knob-label">ПЬЕД</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="fenv.r"></div>
+          <div class="knob-label">ПОСЛЕЗВ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- УСИЛИТЕЛЬ -->
+    <div class="section" id="secAmp">
+      <div class="sec-title">УСИЛИТЕЛЬ</div>
+      <div class="knobs c2">
+        <div class="knob-cell">
+          <div class="knob" data-key="aenv.a"></div>
+          <div class="knob-label">АТАКА</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="aenv.d"></div>
+          <div class="knob-label">ЗАТУХ</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="aenv.s"></div>
+          <div class="knob-label">ПЬЕД</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="aenv.r"></div>
+          <div class="knob-label">ПОСЛЕЗВ</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="aenv.mode"></div>
+          <div class="knob-label">РЕЖИМ</div>
+        </div>
+        <div class="knob-cell">
+          <div class="knob" data-key="amp.modAmt"></div>
+          <div class="knob-label">ТРЕМОЛО</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer scope + master -->
+  <div class="footer">
+    <div class="tape">
+      <span><span class="k">ГЛИС</span><span class="v" id="tGlide">0.00</span></span>
+      <span><span class="k">ПЕРЕГ</span><span class="v" id="tDrive">0.15</span></span>
+      <span><span class="k">ГРОМК</span><span class="v" id="tVol">0.85</span></span>
+    </div>
+    <div class="scope-wrap">
+      <div class="grid"></div>
+      <canvas id="scope"></canvas>
+    </div>
+    <div class="tape">
+      <span><span class="k">ГОЛ</span><span class="v" id="tVoices">0/2</span></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // --- Param defaults (mirror plugin.json defaults) ---
+  const PARAMS = {
+    "mod.rate": 4, "mod.shape": 0,
+    "osc1.range": 1, "osc1.shape": 1, "osc1.tune": 0, "osc1.modDepth": 0,
+    "osc2.range": 1, "osc2.shape": 0, "osc2.detune": 0.07, "osc2.modDepth": 0, "osc2.xmod": 0,
+    "mix.osc1": 0.7, "mix.osc2": 0.5, "mix.noise": 0,
+    "filt.mode": 0, "filt.cutoff": 1200, "filt.reso": 0.35, "filt.envAmt": 0.5, "filt.modAmt": 0,
+    "fenv.a": 0.01, "fenv.d": 0.35, "fenv.s": 0.4, "fenv.r": 0.2, "fenv.mode": 0,
+    "aenv.a": 0.005, "aenv.d": 0.3, "aenv.s": 0.85, "aenv.r": 0.15, "aenv.mode": 0,
+    "amp.modAmt": 0,
+    "glide": 0, "drive": 0.15, "volume": 0.85
+  };
+  const RANGES = {
+    "mod.rate": [0.05, 30], "mod.shape": [0, 3],
+    "osc1.range": [0, 3], "osc1.shape": [0, 4], "osc1.tune": [-100, 100], "osc1.modDepth": [0, 1],
+    "osc2.range": [0, 3], "osc2.shape": [0, 4], "osc2.detune": [-12, 12], "osc2.modDepth": [0, 1], "osc2.xmod": [0, 1],
+    "mix.osc1": [0, 1], "mix.osc2": [0, 1], "mix.noise": [0, 1],
+    "filt.mode": [0, 1], "filt.cutoff": [40, 16000], "filt.reso": [0, 1], "filt.envAmt": [-1, 1], "filt.modAmt": [0, 1],
+    "fenv.a": [0.001, 4], "fenv.d": [0.005, 6], "fenv.s": [0, 1], "fenv.r": [0.005, 6], "fenv.mode": [0, 1],
+    "aenv.a": [0.001, 4], "aenv.d": [0.005, 6], "aenv.s": [0, 1], "aenv.r": [0.005, 6], "aenv.mode": [0, 1],
+    "amp.modAmt": [0, 1],
+    "glide": [0, 1], "drive": [0, 1], "volume": [0, 1.5]
+  };
+  // Keys that use an exponential visual mapping.
+  const LOG_KEYS = new Set([
+    "mod.rate", "filt.cutoff",
+    "fenv.a", "fenv.d", "fenv.r",
+    "aenv.a", "aenv.d", "aenv.r"
+  ]);
+
+  const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  const midiName = n => (typeof n !== "number" || !isFinite(n))
+    ? "———"
+    : NOTE_NAMES[((Math.round(n) % 12) + 12) % 12] + (Math.floor(Math.round(n) / 12) - 1);
+
+  const $ = id => document.getElementById(id);
+
+  // --- Knobs: rotate indicator based on param value ---
+  const knobs = Array.from(document.querySelectorAll(".knob[data-key]"));
+  const knobByKey = {};
+  for (const el of knobs) knobByKey[el.getAttribute("data-key")] = el;
+
+  function normalize(key, v) {
+    const [lo, hi] = RANGES[key] || [0, 1];
+    if (hi === lo) return 0;
+    let t;
+    if (LOG_KEYS.has(key)) {
+      const a = Math.max(lo, 1e-6);
+      const b = Math.max(hi, a * 1.0001);
+      const vv = Math.max(a, Math.min(b, Math.abs(v) || a));
+      t = Math.log(vv / a) / Math.log(b / a);
+    } else {
+      t = (v - lo) / (hi - lo);
+    }
+    return Math.max(0, Math.min(1, t));
+  }
+  function updateKnob(key) {
+    const el = knobByKey[key];
+    if (!el) return;
+    const t = normalize(key, PARAMS[key]);
+    // -135° at 0, +135° at 1
+    const deg = -135 + t * 270;
+    el.style.setProperty("--rot", deg + "deg");
+  }
+  for (const k of Object.keys(PARAMS)) updateKnob(k);
+
+  // --- Header status ---
+  const noteVal = $("noteVal"), hzVal = $("hzVal"), modVal = $("modVal");
+  const tGlide = $("tGlide"), tDrive = $("tDrive"), tVol = $("tVol"), tVoices = $("tVoices");
+  const ledPower = $("ledPower");
+  ledPower.classList.add("on");
+
+  function updateTape() {
+    tGlide.textContent = (PARAMS["glide"] || 0).toFixed(3);
+    tDrive.textContent = (PARAMS["drive"] || 0).toFixed(2);
+    tVol.textContent = (PARAMS["volume"] || 0).toFixed(2);
+    modVal.textContent = (PARAMS["mod.rate"] || 0).toFixed(2) + " Hz";
+  }
+  updateTape();
+
+  // --- Voice tracking ---
+  const voices = new Map();  // voiceId -> { note, freq, startedAt }
+  function refreshVoices() {
+    tVoices.textContent = voices.size + "/2";
+    const active = voices.size > 0;
+    document.getElementById("secOsc1").classList.toggle("hot", active);
+    document.getElementById("secOsc2").classList.toggle("hot", active);
+    if (active) {
+      // Use last voice for display
+      let latest = null, t = -1;
+      for (const v of voices.values()) if (v.startedAt > t) { t = v.startedAt; latest = v; }
+      if (latest) {
+        noteVal.textContent = midiName(latest.note);
+        hzVal.textContent = (latest.freq || 0).toFixed(1);
+      }
+    }
+  }
+
+  // --- Filter section glow scales with cutoff*reso ---
+  const secFilt = $("secFilt");
+  function updateFilterGlow() {
+    const cut = PARAMS["filt.cutoff"] || 40;
+    const res = PARAMS["filt.reso"] || 0;
+    const cutT = normalize("filt.cutoff", cut);
+    const heat = 0.3 * cutT + 0.7 * res;
+    if (heat > 0.5) secFilt.classList.add("hot"); else secFilt.classList.remove("hot");
+  }
+
+  // --- LFO display pulses the power LED and the МОДУЛЯТОР section ---
+  const secMod = $("secMod");
+  let lfoPhase = 0;
+  function stepLfo(dt) {
+    lfoPhase += (PARAMS["mod.rate"] || 0) * dt;
+    lfoPhase -= Math.floor(lfoPhase);
+    const tri = 1 - 4 * Math.abs(lfoPhase - 0.5);
+    const lit = tri > 0;
+    // Only modulate LED when a voice is using the LFO or always-on visual
+    ledPower.style.boxShadow = lit
+      ? `0 0 6px var(--led-red), 0 0 ${8 + Math.abs(tri) * 16}px var(--led-red)`
+      : "";
+    secMod.classList.toggle("hot", lit && (PARAMS["mod.rate"] || 0) > 0.4);
+  }
+
+  // --- Scope ---
+  const scope = $("scope");
+  const sCtx = scope.getContext("2d");
+  function fitScope() {
+    const dpr = window.devicePixelRatio || 1;
+    scope.width = Math.floor(scope.clientWidth * dpr);
+    scope.height = Math.floor(scope.clientHeight * dpr);
+  }
+  window.addEventListener("resize", fitScope);
+  fitScope();
+
+  // We don't have direct sample data, so render a param-driven "fake" scope
+  // that traces a composite wave: sum of the two oscillators at their
+  // current shape and relative pitch, modulated by env approximation.
+  const SHAPES = ["tri", "saw", "sqr", "pw25", "pw12"];
+  function oscShape(kind, phase) {
+    switch (kind) {
+      case "tri":  return 1 - 4 * Math.abs(phase - 0.5);
+      case "saw":  return 2 * phase - 1;
+      case "sqr":  return phase < 0.5 ? 1 : -1;
+      case "pw25": return phase < 0.25 ? 1 : -1;
+      case "pw12": return phase < 0.12 ? 1 : -1;
+      default: return 0;
+    }
+  }
+  function drawScope(envAmt) {
+    const w = scope.width, h = scope.height;
+    sCtx.clearRect(0, 0, w, h);
+    sCtx.strokeStyle = `rgba(118,223,208,${0.5 + 0.5 * envAmt})`;
+    sCtx.lineWidth = Math.max(1, (window.devicePixelRatio || 1));
+    sCtx.beginPath();
+    const s1 = SHAPES[Math.max(0, Math.min(4, PARAMS["osc1.shape"] | 0))];
+    const s2 = SHAPES[Math.max(0, Math.min(4, PARAMS["osc2.shape"] | 0))];
+    const m1 = PARAMS["mix.osc1"] || 0;
+    const m2 = PARAMS["mix.osc2"] || 0;
+    const mN = PARAMS["mix.noise"] || 0;
+    const det = PARAMS["osc2.detune"] || 0;
+    const f2mul = Math.pow(2, det / 12);
+    const steps = Math.max(64, Math.floor(w / 2));
+    for (let i = 0; i < steps; i++) {
+      const tX = i / steps;
+      // show two cycles
+      const p1 = (tX * 2) % 1;
+      const p2 = (tX * 2 * f2mul) % 1;
+      let s = oscShape(s1, p1) * m1 + oscShape(s2, p2) * m2;
+      s += (Math.random() * 2 - 1) * mN * 0.5;
+      s = Math.tanh(s * 1.2);
+      const x = (i / (steps - 1)) * w;
+      const y = h / 2 - s * (h / 2 - 2) * (0.6 + 0.4 * envAmt);
+      if (i === 0) sCtx.moveTo(x, y); else sCtx.lineTo(x, y);
+    }
+    sCtx.shadowColor = "#77dfd0";
+    sCtx.shadowBlur = 6;
+    sCtx.stroke();
+    sCtx.shadowBlur = 0;
+  }
+
+  // --- Animation loop ---
+  let lastT = performance.now();
+  let envDisplay = 0.5;
+  function frame(now) {
+    const dt = Math.min(0.1, (now - lastT) / 1000);
+    lastT = now;
+    // Smoothly blend envelope display toward a rough target:
+    //   more voices => higher; release when none.
+    const target = voices.size > 0 ? 1 : 0.12;
+    envDisplay += (target - envDisplay) * (1 - Math.exp(-dt * 3));
+    stepLfo(dt);
+    drawScope(envDisplay);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // --- Host event bridge ---
+  window.addEventListener("message", (e) => {
+    const ev = e.data;
+    if (!ev || typeof ev !== "object") return;
+    switch (ev.type) {
+      case "noteOn": {
+        const vid = ev.voiceId ?? ev.note;
+        voices.set(vid, { note: ev.note, freq: ev.frequencyHz || ev.frequency || 0, startedAt: performance.now() });
+        refreshVoices();
+        break;
+      }
+      case "noteOff": {
+        const vid = ev.voiceId ?? ev.note;
+        voices.delete(vid);
+        refreshVoices();
+        if (voices.size === 0) {
+          noteVal.textContent = "———";
+          hzVal.textContent = "———";
+        }
+        break;
+      }
+      case "allNotesOff":
+        voices.clear();
+        refreshVoices();
+        noteVal.textContent = "———";
+        hzVal.textContent = "———";
+        break;
+      case "pitch": {
+        const vid = ev.voiceId;
+        const v = voices.get(vid);
+        if (v && ev.frequencyHz) { v.freq = ev.frequencyHz; refreshVoices(); }
+        break;
+      }
+      case "param": {
+        if (ev.key in PARAMS) {
+          PARAMS[ev.key] = ev.value;
+          updateKnob(ev.key);
+          if (ev.key.startsWith("filt")) updateFilterGlow();
+          if (ev.key === "glide" || ev.key === "drive" || ev.key === "volume" || ev.key === "mod.rate") updateTape();
+        }
+        break;
+      }
+      case "themeChange":
+        // Ignored — we use our own scoped palette.
+        break;
+    }
+  });
+
+  updateFilterGlow();
+  try { parent.postMessage({ type: "__nt_ready" }, "*"); } catch (_) {}
+})();
+</script>
+</body>
+</html>
